@@ -1,23 +1,20 @@
-import 'dart:js_interop_unsafe';
-
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:try_code/database_helper.dart';
-import 'package:try_code/todo.dart';
+import 'database_helper.dart';
+import 'todo.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 // stl
 class MyApp extends StatelessWidget {
-  MyApp({super.key});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SQLiteでCRUDする方法',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        fontFamily: 'NotoSansJP',
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
         useMaterial3: true,
       ),
       home: const MyHomePage(),
@@ -37,13 +34,15 @@ class _MyHomePageState extends State<MyHomePage> {
   // DatabaseHelperをインスタンス化
   final dbHelper = DatabaseHelper();
   List<bool> _expandedList = [];
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _detailController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     List<Todo> todos = [];
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.white,
         title: const Text('SQLiteでCRUDできるアプリ'),
       ),
       // Todoリストを表示
@@ -120,6 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
         onPressed: () {
           //モーダルボトムシートを表示
           showModalBottomSheet(
@@ -130,10 +130,90 @@ class _MyHomePageState extends State<MyHomePage> {
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      //Column のchildrenで埋まった領域に対する残りの領域を縦方向に最小化するプロパティ
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SmallText(
+                          text: 'title',
+                          fontWeight: FontWeight.bold,
+                        ),
+                        TextField(
+                          controller: _titleController,
+                          decoration: const InputDecoration(
+                            labelText: 'Enter your text',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SmallText(
+                          text: 'detail',
+                          fontWeight: FontWeight.bold,
+                        ),
+                        TextField(
+                          controller: _detailController,
+                          maxLines: 5, // 最大行数を指定
+                          decoration: const InputDecoration(
+                            labelText: 'Enter your message',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: TextButton(
+                            onPressed: () async {
+                              final todo = Todo(
+                                title: _titleController
+                                    .text, // .textプロパティでTextEditingControllerの値を取得
+                                detail: _detailController.text,
+                                done: false,
+                              );
+                              await dbHelper.insertTodo(todo);
+                              setState(() {
+                                Navigator.pop(context); //
+                              });
+                            },
+                            child: const Text('保存'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               );
             },
           );
         },
+      ),
+    );
+  }
+}
+
+// コンポーネント(部品)
+class SmallText extends StatelessWidget {
+  const SmallText({
+    super.key,
+    required this.text,
+    required this.fontWeight,
+  });
+
+  final String text;
+  final FontWeight fontWeight;
+
+  @override
+  Widget build(BuildContext context) {
+    double checkboxSize = 18.0;
+    return Padding(
+      padding: EdgeInsets.only(left: checkboxSize + 8.0),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: fontWeight,
+        ),
       ),
     );
   }
