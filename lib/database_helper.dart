@@ -34,7 +34,8 @@ class DatabaseHelper {
   //全てのデータの取得
   Future<List<Todo>> getTodos() async {
     final Database db = await _getDB();
-    final List<Map<String, dynamic>> maps = await db.query('todo');
+    final List<Map<String, dynamic>> maps =
+        await db.query('todos'); // todosテーブルを取得
     return List.generate(maps.length, (i) {
       return Todo(
         id: maps[i]['id'],
